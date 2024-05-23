@@ -9,8 +9,8 @@ pip install -r requirements.txt
 ```
 mkdir proyek_analisis_data
 cd proyek_analisis_data
-pipenv install
-pipenv shell
+python -m venv venv
+source venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
