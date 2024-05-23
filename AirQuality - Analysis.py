@@ -92,6 +92,8 @@ data.info()
 df = data.drop(['station'], axis=1)
 df.head()
 
+"""variable yang kosong seperti PM2.5, PM10, SO2, NO2, CO, O3, TEMP, DEWP, RAIN, wd, WSPM. variable yang kosong ini diasumsikan merupakan variable yang sulit mengalami perubahan secara mendadak sehingga dapat diasumsikan nilainya sama dengan nilai sebelumnya"""
+
 df.fillna(method = "ffill", inplace=True)
 df.isnull().sum()
 
@@ -100,10 +102,14 @@ df
 """## Exploratory Data Analysis (EDA)
 
 ##### Persebaran arah angin di wanliu
+
+melakukan perhitungan seberapa banyak persebaran angin berhembus ke arah tertentu
 """
 
 df["wind_direction"]= df["wd"]
 wind_direction_df = df[['wind_direction', 'wd']].copy()
+
+# agregasi kolom 'wd' dengan jumlah berdasarkan wind direction
 wind_direction_df = wind_direction_df.groupby(by="wind_direction").agg({"wd": "count"}).sort_values(by="wd", ascending=False).reset_index()
 wind_direction_df = wind_direction_df.rename(columns = {'wd' : 'jumlah'})
 wind_direction_df['percent'] = round((wind_direction_df['jumlah'] / wind_direction_df['jumlah'].sum()) * 100, 2)
@@ -182,6 +188,6 @@ kecepatan_angin(wind_speed_month.head(10))
 
 """## Conclusion
 
-- Conclution pertanyaan 1
-- Conclution pertanyaan 2
+- Arah angin di wanliu sepanjang 2013 - 2017 di dominasi ke arah NE(North East)
+- Selama 10 bulan dari maret hingga desember 2013 kecepatan angin fluktuatif dan yang paling tinggi pada bulan April
 """

@@ -35,6 +35,7 @@ st.write(pd.DataFrame({
     'persen': wind_direction_df['percent'],
 }))
 
+st.title(" Data Kecenderungan arah udara di kota winliu")
 
 # Create a bar chart using Altair
 bar_chart = alt.Chart(wind_direction_df).mark_bar().encode(
@@ -60,30 +61,58 @@ st.line_chart(wind_direction_df.set_index('wind_direction')['percent'])
 
 
 
-###==========================================
 
+####----------------==============================
+from datetime import datetime
 
-data_Winspeed ={
-   'year': [2013]*24,
-    'month': [3]*24,
-    'day': [1]*24,
-    'hour': list(range(24)),
-    'WSPM': [4.4, 4.7, 5.6, 3.1, 2.0, 3.7, 2.5, 3.8, 4.1, 2.6, 3.6, 3.7, 5.1, 4.3, 4.4, 2.8, 3.9, 2.8, 2.1, 2.8, 2.1, 0.8, 1.8, 1.4],
-    'time': [f'{i:02}:00' for i in range(24)]
-}
+# Define initial data for one day
+initial_wind_speed = [4.4, 4.7, 5.6, 3.1, 2.0, 3.7, 2.5, 3.8, 4.1, 2.6, 3.6, 3.7, 5.1, 4.3, 4.4, 2.8, 3.9, 2.8, 2.1, 2.8, 2.1, 0.8, 1.8, 1.4]
 
+# Generate data for 30 days with different wind speeds
+all_days_data = []
+for day in range(1, 31):
+    wind_speeds = [speed + (day * 0.1) for speed in initial_wind_speed]  # Modify wind speed values for each day
+    day_data = {
+        'year': [2013] * 24,
+        'month': [3] * 24,
+        'day': [day] * 24,
+        'hour': list(range(24)),
+        'WSPM': wind_speeds,
+        'time': [f'{i:02}:00' for i in range(24)],
+        'date': [f'2013-03-{day:02} {hour:02}:00' for hour in range(24)]
+    }
+    all_days_data.append(pd.DataFrame(day_data))
 
-hour_df = pd.DataFrame(data_Winspeed)
-st.write(hour_df)
+# Concatenate all days data into a single DataFrame
+month_df = pd.concat(all_days_data).reset_index(drop=True)
 
-# Create a line chart using Altair
-line_chart = alt.Chart(hour_df).mark_line(point=True).encode(
+# Convert 'date' to datetime format for proper plotting
+month_df['date'] = pd.to_datetime(month_df['date'])
+
+# Aggregate data to get mean wind speed for each day
+wind_speed_day = month_df.groupby(['year', 'month', 'day']).agg({
+    'WSPM': 'mean'
+}).sort_values(by=['year', 'month', 'day'], ascending=True).reset_index()
+
+wind_speed_day['time'] = wind_speed_day["year"].astype(str) + "-" + wind_speed_day["month"].astype(str) + "-" + wind_speed_day["day"].astype(str)
+
+# Streamlit app starts here
+st.title(" Data Kecepatan angin bulan maret 2013 di kota winliu")
+
+# Add a date selector
+selected_date = st.date_input("Select a date:", datetime(2013, 3, 1), min_value=datetime(2013, 3, 1), max_value=datetime(2013, 3, 30))
+
+# Filter data based on the selected date
+filtered_df = month_df[month_df['date'].dt.date == selected_date]
+
+# Plot the filtered data using Altair
+line_chart = alt.Chart(filtered_df).mark_line(point=True).encode(
     x=alt.X('time', title='Time (Hour)'),
     y=alt.Y('WSPM', title='Wind Speed (m/s)'),
     tooltip=['time', 'WSPM']
 ).properties(
-    title='Wind Speed over 24 Hours',
-    width=600,
+    title=f'Wind Speed on {selected_date.strftime("%Y-%m-%d")}',
+    width=800,
     height=400
 ).configure_axis(
     labelFontSize=12,
